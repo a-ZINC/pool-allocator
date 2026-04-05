@@ -1,45 +1,45 @@
 #include<iostream>
 #include "../include/pool-allocator.hpp"
 
+
+struct Person {
+    std::string name;
+    int age;
+
+    Person(std::string name, int age) : name(name), age(age) {
+        std::cout<<"Constructed " << name << std::endl;
+    }
+    ~Person() {
+        std::cout<<"Destroyed " << name << std::endl;
+    }
+
+};
+
 int main() {
-    PoolAllocator<int, 4> allocator;
-    std::cout << "\n--- Allocating 1 ---\n";
-    int* a = allocator.allocate();
-    std::cout << "\n--- Allocating 2 ---\n";
-    int* b = allocator.allocate();
-    std::cout << "\n--- Allocating 3 ---\n";
-    int* c = allocator.allocate();
-    std::cout << "\n--- Allocating 4 ---\n";
-    int* d = allocator.allocate();
-    std::cout << "\n--- Allocating 5 (fail) ---\n";
-    int* e = allocator.allocate();
+    PoolAllocator<Person, 2> allocator;
+    
+    std::cout<< "\n--- Construct p1 ---" << std::endl;
+    Person* p1 = allocator.construct("John", 30);
+
+    std::cout<< "\n--- Construct p2 ---" << std::endl;
+    Person* p2 = allocator.construct("Jane", 25);
+
+    std::cout<< "\n--- Construct p3 ---" << std::endl;
+    Person* p3 = allocator.construct("Bob", 40);
 
     allocator.debug_state();
     allocator.debug_freelist();
 
-    std::cout << "\n--- Deallocating 1 ---\n";
-    allocator.deallocate(a);
-    std::cout << "\n--- Deallocating 2 ---\n";
-    allocator.deallocate(c);
+    std::cout<< "\n--- Access objects ---" << std::endl;
+    if (p1) std::cout<< p1->name << " is " << p1->age << " years old" << std::endl;
+    if (p2) std::cout<< p2->name << " is " << p2->age << " years old" << std::endl;
+    if (p3) std::cout<< p3->name << " is " << p3->age << " years old" << std::endl;
 
-    allocator.debug_state();
-    allocator.debug_freelist();
+    allocator.destroy(p1);
+    allocator.deallocate(p1);
 
-    std::cout<< "\n--- Allocating again (use c) ---\n";
-    int* f = allocator.allocate();
-    std::cout << "\n---Allocating again (use a) ---\n";
-    int* g = allocator.allocate();
+    allocator.destroy(p2);
+    allocator.deallocate(p2);
 
-    allocator.debug_state();
-    allocator.debug_freelist();
-
-    std::cout << "\nPointers:\n";
-    std::cout << "a = " << a << std::endl;
-    std::cout << "b = " << b << std::endl;
-    std::cout << "c = " << c << std::endl;
-    std::cout << "d = " << d << std::endl;
-    std::cout << "e = " << e << std::endl;
-    std::cout << "x = " << f << std::endl;
-    std::cout << "y = " << g << std::endl;
     return 0;
 }

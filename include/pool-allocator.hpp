@@ -2,6 +2,8 @@
 
 #include <cstddef>
 #include <iostream>
+#include<new>
+#include<utility>
 template<typename T, std::size_t N>
 class PoolAllocator {
 private:
@@ -79,6 +81,26 @@ public:
                  << ", allocated = " << allocated
                  << ", peak = " << peak << std::endl;
         return reinterpret_cast<T*> (curr_free);
+    }
+
+    template<typename... Args>
+    T* construct(Args&&... args) {
+        T* slot = allocate();
+        if (slot == nullptr) {
+            return nullptr;
+        }
+        
+        new (slot) T(std::forward<Args>(args)...);
+        std::cout<<"Constructed " << slot << std::endl;
+        return slot;
+    }
+
+    void destroy(T* slot) {
+        if (slot == nullptr) {
+            std::cout << "Cannot destroy nullptr" << std::endl;
+            return;
+        }
+        slot->~T();
     }
 
     void deallocate(T* freedSlot) {
