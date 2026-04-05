@@ -5,6 +5,7 @@
 template<typename T, std::size_t N>
 class PoolAllocator {
 private:
+    static_assert(N > 0, "N must be greater than 0");
     static constexpr std::size_t SLOT_SIZE = 
         sizeof(T) > sizeof(void*) ? sizeof(T) : sizeof(void*);
 
@@ -42,9 +43,82 @@ public:
         freelist_head(nullptr), allocated(0), peak(0) {
             initialize_freelist();
             std::cout << "After freelist init, head = " << freelist_head << std::endl;
-            void* 
+
+            void* curr = freelist_head;
+            std::size_t index = 0;
+
+            while (curr != nullptr) {
+                std::cout << "Free node " << index
+                        << ": current = " << curr
+                        << ", next = " << read_next(curr)
+                        << std::endl;
+                curr = read_next(curr);
+                ++index;
+            }
     }
     ~PoolAllocator() {
         std::cout << "Allocator destroyed" << std::endl;
+    }
+
+    T* allocate() {
+        if (freelist_head == nullptr) {
+            std::cout << "Out of memory" << std::endl;
+            return nullptr;
+        }
+
+        void* curr_free = freelist_head;
+        freelist_head = read_next(curr_free);
+
+        ++allocated;
+        if (allocated > peak) {
+            peak = allocated;
+        }
+
+        std::cout<<"Allocated " << curr_free
+                 << ", freelist head = " << freelist_head
+                 << ", allocated = " << allocated
+                 << ", peak = " << peak << std::endl;
+        return reinterpret_cast<T*> (curr_free);
+    }
+
+    void deallocate(T* freedSlot) {
+        if (freedSlot == nullptr) {
+            std::cout << "Cannot deallocate nullptr" << std::endl;
+            return;
+        }
+        void* slot = reinterpret_cast<void*> (freedSlot);
+        write_next(slot, freelist_head);
+        freelist_head = slot;
+
+        --allocated;
+
+        std::cout << "Deallocated " << slot
+              << ", new freelist_head = " << freelist_head
+              << ", allocated = " << allocated
+              << ", peak = " << peak
+              << std::endl;
+    }
+
+    void debug_state() const {
+        std::cout << "=== Allocator State ===" << std::endl;
+        std::cout << "freelist_head = " << freelist_head << std::endl;
+        std::cout << "allocated = " << allocated << std::endl;
+        std::cout << "peak = " << peak << std::endl;
+    }
+
+    void debug_freelist() const {
+        std::cout << "=== Free List ===" << std::endl;
+
+        void* curr = freelist_head;
+        std::size_t index = 0;
+
+        while (curr != nullptr) {
+            std::cout << "Free node " << index
+                    << ": current = " << curr
+                    << ", next = " << *reinterpret_cast<void**>(curr)
+                    << std::endl;
+            curr = *reinterpret_cast<void**>(curr);
+            ++index;
+        }
     }
 };
