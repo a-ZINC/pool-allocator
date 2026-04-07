@@ -44,27 +44,27 @@ public:
     PoolAllocator():
         freelist_head(nullptr), allocated(0), peak(0) {
             initialize_freelist();
-            std::cout << "After freelist init, head = " << freelist_head << std::endl;
+            // std::cout << "After freelist init, head = " << freelist_head << std::endl;
 
             void* curr = freelist_head;
             std::size_t index = 0;
 
             while (curr != nullptr) {
-                std::cout << "Free node " << index
-                        << ": current = " << curr
-                        << ", next = " << read_next(curr)
-                        << std::endl;
+                // std::cout << "Free node " << index
+                        // << ": current = " << curr
+                        // << ", next = " << read_next(curr)
+                        // << std::endl;
                 curr = read_next(curr);
                 ++index;
             }
     }
     ~PoolAllocator() {
-        std::cout << "Allocator destroyed" << std::endl;
+        // std::cout << "Allocator destroyed" << std::endl;
     }
 
     T* allocate() {
         if (freelist_head == nullptr) {
-            std::cout << "Out of memory" << std::endl;
+            // std::cout << "Out of memory" << std::endl;
             return nullptr;
         }
 
@@ -76,10 +76,10 @@ public:
             peak = allocated;
         }
 
-        std::cout<<"Allocated " << curr_free
-                 << ", freelist head = " << freelist_head
-                 << ", allocated = " << allocated
-                 << ", peak = " << peak << std::endl;
+        // std::cout<<"Allocated " << curr_free
+                //  << ", freelist head = " << freelist_head
+                //  << ", allocated = " << allocated
+                //  << ", peak = " << peak << std::endl;
         return reinterpret_cast<T*> (curr_free);
     }
 
@@ -91,13 +91,13 @@ public:
         }
         
         new (slot) T(std::forward<Args>(args)...);
-        std::cout<<"Constructed " << slot << std::endl;
+        // std::cout<<"Constructed " << slot << std::endl;
         return slot;
     }
 
     void destroy(T* slot) {
         if (slot == nullptr) {
-            std::cout << "Cannot destroy nullptr" << std::endl;
+            // std::cout << "Cannot destroy nullptr" << std::endl;
             return;
         }
         slot->~T();
@@ -105,7 +105,7 @@ public:
 
     void deallocate(T* freedSlot) {
         if (freedSlot == nullptr) {
-            std::cout << "Cannot deallocate nullptr" << std::endl;
+            // std::cout << "Cannot deallocate nullptr" << std::endl;
             return;
         }
         void* slot = reinterpret_cast<void*> (freedSlot);
@@ -114,11 +114,11 @@ public:
 
         --allocated;
 
-        std::cout << "Deallocated " << slot
-              << ", new freelist_head = " << freelist_head
-              << ", allocated = " << allocated
-              << ", peak = " << peak
-              << std::endl;
+        // std::cout << "Deallocated " << slot
+            //   << ", new freelist_head = " << freelist_head
+            //   << ", allocated = " << allocated
+            //   << ", peak = " << peak
+            //   << std::endl;
     }
 
     void debug_state() const {
